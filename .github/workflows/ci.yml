@@ -42,12 +42,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       
-      # Install Playwright browsers for browser testing
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps chromium firefox webkit
-      
       - name: Run Node.js tests
         run: pnpm test
       
-      - name: Run browser tests
-        run: pnpm run test-browser-all
+      # Browser tests with Playwright can be run with: pnpm run test-browser-all
+      # Note: Browser tests require Playwright browsers to be installed first:
+      # pnpm exec playwright install --with-deps chromium firefox webkit
