@@ -1,33 +1,10 @@
 import { defineConfig } from 'vitest/config'
 import { playwright } from '@vitest/browser-playwright'
-import { Plugin } from 'vite'
-
-// Plugin to inject process global in browser
-function processGlobalPlugin(): Plugin {
-  return {
-    name: 'process-global',
-    transformIndexHtml() {
-      return [
-        {
-          tag: 'script',
-          attrs: { type: 'module' },
-          children: `
-            import process from 'process/browser';
-            window.process = process;
-            window.global = window;
-          `
-        }
-      ]
-    }
-  }
-}
 
 export default defineConfig({
-  plugins: [processGlobalPlugin()],
   define: {
-    // Define process.env for browser
-    'process.env': {},
-    global: 'window'
+    // Define global for compatibility
+    global: 'globalThis'
   },
   resolve: {
     alias: {
@@ -40,14 +17,15 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['events', 'buffer', 'stream-browserify', 'util', 'process/browser']
+    include: ['events', 'buffer', 'stream-browserify', 'util', 'process', 'process/browser']
   },
   test: {
     globals: true,
     testTimeout: 30000,
     hookTimeout: 30000,
+    setupFiles: ['test/setup-browser.ts'],
     include: ['test/**/*.ts', 'test/**/*.js'],
-    exclude: ['node_modules/**', 'test/common.ts', 'test/common.js'],
+    exclude: ['node_modules/**', 'test/common.ts', 'test/common.js', 'test/setup-browser.ts'],
     browser: {
       enabled: true,
       instances: [
