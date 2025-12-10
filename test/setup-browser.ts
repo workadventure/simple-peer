@@ -10,6 +10,6 @@ import { Buffer } from 'buffer'
 // Ensure process.nextTick is available
 if (!process.nextTick) {
   process.nextTick = function(fn: Function, ...args: any[]) {
-    Promise.resolve().then(() => fn(...args))
+    return Promise.resolve().then(() => fn(...args))
   }
 }

@@ -17,7 +17,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['events', 'buffer', 'stream-browserify', 'util', 'process', 'process/browser']
+    include: ['events', 'buffer', 'stream-browserify', 'util', 'process/browser']
   },
   test: {
     globals: true,
