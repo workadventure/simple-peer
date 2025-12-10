@@ -51,6 +51,8 @@ export default defineConfig({
     browser: {
       enabled: true,
       instances: [
+        // Default to chromium, but can be overridden with --browser.name flag
+        // Supported browsers: chromium, firefox, webkit
         { browser: 'chromium', provider: playwright() }
       ],
       headless: true
