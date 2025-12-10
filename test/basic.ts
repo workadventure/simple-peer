@@ -2,7 +2,12 @@ import common from './common.js'
 import Peer from '../index.js'
 import { test, expect } from 'vitest'
 
-process.on('uncaughtException', console.error) // User-Initiated Abort, reason=Close called
+// Handle uncaught exceptions in both Node.js and browser
+if (typeof process !== 'undefined' && process.on) {
+  process.on('uncaughtException', console.error) // User-Initiated Abort, reason=Close called
+} else if (typeof window !== 'undefined') {
+  window.addEventListener('error', (event) => console.error(event.error))
+}
 
 test('detect WebRTC support', function () {
   expect(Peer.WEBRTC_SUPPORT).toBe(true)

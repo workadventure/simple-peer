@@ -41,8 +41,13 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
-      - run: echo "127.0.0.1 airtap.local" | sudo tee -a /etc/hosts
-      - run: pnpm test
-        env:
-          SAUCE_USERNAME: ${{ secrets.SAUCE_USERNAME }}
-          SAUCE_ACCESS_KEY: ${{ secrets.SAUCE_ACCESS_KEY }}
+      
+      # Install Playwright browsers for browser testing
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+      
+      - name: Run Node.js tests
+        run: pnpm test
+      
+      - name: Run browser tests
+        run: pnpm run test-browser-all
