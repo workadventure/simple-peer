@@ -44,7 +44,9 @@ jobs:
       
       - name: Run Node.js tests
         run: pnpm test
-      
-      # Browser tests with Playwright can be run with: pnpm run test-browser-all
-      # Note: Browser tests require Playwright browsers to be installed first:
-      # pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Run Playwright Browser Tests
+        run: pnpm run test-browser-all
