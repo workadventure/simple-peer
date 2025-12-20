@@ -1,6 +1,9 @@
 name: Release
 on:
-  push:
+  workflow_run:
+    workflows: ["ci"]
+    types:
+      - completed
     branches:
       - master
 permissions:
@@ -11,6 +14,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
