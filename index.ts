@@ -9,14 +9,14 @@ import { MediaStream, MediaStreamTrack, RTCRtpSender, RTCRtpTransceiver } from '
  */
 class Peer extends Lite {
   streams: MediaStream[]
-  _senderMap: Map<MediaStreamTrack, Map<MediaStream, RTCRtpSender>>
+  _senderMap: WeakMap<MediaStreamTrack, WeakMap<MediaStream, RTCRtpSender>>
 
   constructor (opts: PeerOptions = {}) {
     super(opts)
     if (!this._pc) return
 
     this.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
-    this._senderMap = new Map()
+    this._senderMap = new WeakMap()
 
     if (this.streams) {
       this.streams.forEach(stream => {
@@ -72,7 +72,7 @@ class Peer extends Lite {
     if (this.destroyed) throw errCode(new Error('cannot addTrack after peer is destroyed'), 'ERR_DESTROYED')
     this._debug('addTrack()')
 
-    const submap = this._senderMap.get(track) || new Map() // nested Maps map [track, stream] to sender
+    const submap = this._senderMap.get(track) || new WeakMap() // nested Maps map [track, stream] to sender
     let sender = submap.get(stream)
     if (!sender) {
       sender = this._pc!.addTrack(track, stream)
