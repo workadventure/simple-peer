@@ -9,7 +9,7 @@
     "url": "http://github.com/ThaUnknown"
   },
   "bugs": {
-    "url": "https://github.com/thaunknown/simple-websocket/issues"
+    "url": "https://github.com/workadventure/simple-peer/issues"
   },
   "dependencies": {
     "debug": "^4.3.7",
@@ -81,7 +81,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/thaunknown/simple-peer.git"
+    "url": "git://github.com/workadventure/simple-peer.git"
   },
   "scripts": {
     "build": "tsc",
