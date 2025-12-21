@@ -1,5 +1,5 @@
 {
-  "name": "@thaunknown/simple-peer",
+  "name": "@workadventure/simple-peer",
   "description": "Simple one-to-one WebRTC video/voice and data channels",
   "version": "10.0.12",
   "type": "module",
