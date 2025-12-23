@@ -1,7 +1,7 @@
 /*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 import debug from 'debug'
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RTCDataChannel, RTCDataChannelEvent, RTCPeerConnectionIceEvent, MediaStream, MediaStreamTrack } from 'webrtc-polyfill'
-import { EventEmitter } from 'eventemitter3'
+  import { EventEmitter } from 'eventemitter3'
 import errCode from 'err-code'
 import { randomBytes, arr2hex, text2arr } from 'uint8-util'
 
@@ -149,7 +149,7 @@ class Peer extends EventEmitter<PeerEvents> {
   _closingInterval: ReturnType<typeof setInterval> | null
   _remoteTracks: Array<{ track: MediaStreamTrack; stream: MediaStream }> | null
   _remoteStreams: MediaStream[] | null
-  _chunk: Uint8Array | null
+  _chunk: ArrayBufferView | ArrayBuffer | Uint8Array | string | Blob | null
   _cb: Callback | null
   _interval: ReturnType<typeof setInterval> | null
   _isReactNativeWebrtc: boolean
@@ -432,7 +432,7 @@ class Peer extends EventEmitter<PeerEvents> {
   /**
    * Write data to the peer (with optional callback).
    */
-  write (chunk: Uint8Array, cb?: Callback): void {
+  write (chunk: ArrayBufferView | ArrayBuffer | Uint8Array | string | Blob, cb?: Callback): void {
     this._write(chunk, cb || (() => {}))
   }
 
@@ -566,7 +566,7 @@ class Peer extends EventEmitter<PeerEvents> {
     }, CHANNEL_CLOSING_TIMEOUT)
   }
 
-  _write (chunk: Uint8Array, cb: Callback): void {
+  _write (chunk: ArrayBufferView | ArrayBuffer | Uint8Array | string | Blob, cb: Callback): void {
     if (this.destroyed) return cb(errCode(new Error('cannot write after peer is destroyed'), 'ERR_DATA_CHANNEL'))
 
     if (this._connected) {
