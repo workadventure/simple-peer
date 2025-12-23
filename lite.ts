@@ -1,9 +1,11 @@
 /*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 import debug from 'debug'
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RTCDataChannel, RTCDataChannelEvent, RTCPeerConnectionIceEvent, MediaStream, MediaStreamTrack } from 'webrtc-polyfill'
-import { Duplex, DuplexEvents, Callback } from 'streamx'
+import { EventEmitter } from 'eventemitter3'
 import errCode from 'err-code'
 import { randomBytes, arr2hex, text2arr } from 'uint8-util'
+
+type Callback = (err: Error | null) => void
 
 const Debug = debug('simple-peer')
 
@@ -86,10 +88,15 @@ interface LegacyStatsResult {
   stat: (name: string) => unknown
 }
 
-interface PeerEvents extends DuplexEvents<Uint8Array, Uint8Array> {
+interface PeerEvents {
   signal: (data: SignalData) => void
   connect: () => void
   disconnect: () => void
+  close: () => void
+  error: (err: Error) => void
+  data: (data: Uint8Array | string) => void
+  end: () => void
+  finish: () => void
   iceStateChange: (iceConnectionState: RTCIceConnectionState, iceGatheringState: RTCIceGatheringState) => void
   signalingStateChange: (signalingState: RTCSignalingState) => void
   negotiated: () => void
@@ -101,9 +108,9 @@ interface PeerEvents extends DuplexEvents<Uint8Array, Uint8Array> {
 
 /**
  * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
- * Duplex stream.
+ * Extends EventEmitter for event handling.
  */
-class Peer extends Duplex<Uint8Array, Uint8Array, Uint8Array, Uint8Array, true, true, PeerEvents> {
+class Peer extends EventEmitter<PeerEvents> {
   _pc: RTCPeerConnection | null
   _id: string
   channelName: string | null
@@ -120,6 +127,8 @@ class Peer extends Duplex<Uint8Array, Uint8Array, Uint8Array, Uint8Array, true, 
   _destroying: boolean
   _connected: boolean
   destroyed: boolean
+  _readableEnded: boolean
+  _writableEnded: boolean
   remoteAddress: string | undefined
   remoteFamily: string | undefined
   remotePort: number | undefined
@@ -153,13 +162,12 @@ class Peer extends Duplex<Uint8Array, Uint8Array, Uint8Array, Uint8Array, true, 
   static channelConfig: RTCDataChannelInit
 
   constructor (opts: PeerOptions = {}) {
-    const mergedOpts = Object.assign({
-      allowHalfOpen: false
-    }, opts)
+    super()
 
-    super(mergedOpts as unknown as ConstructorParameters<typeof Duplex<Uint8Array, Uint8Array, Uint8Array, Uint8Array, true, true, PeerEvents>>[0])
-
-    this.__objectMode = !!opts.objectMode // streamx is objectMode by default, so implement readable's functionality
+    this.destroyed = false
+    this._readableEnded = false
+    this._writableEnded = false
+    this.__objectMode = !!opts.objectMode
 
     this._id = arr2hex(randomBytes(4)).slice(0, 7)
     this._debug('new peer %o', opts)
@@ -409,9 +417,40 @@ class Peer extends Duplex<Uint8Array, Uint8Array, Uint8Array, Uint8Array, true, 
     this._isNegotiating = true
   }
 
-  _final (cb: Callback): void {
-    if (!(this as unknown as { _readableState: { ended: boolean } })._readableState.ended) this.push(null)
-    cb(null)
+  /**
+   * Push data to the readable side. If data is null, signals end of stream.
+   */
+  push (data: Uint8Array | string | null): void {
+    if (data === null) {
+      this._readableEnded = true
+      this.emit('end')
+    } else {
+      this.emit('data', data)
+    }
+  }
+
+  /**
+   * Write data to the peer (with optional callback).
+   */
+  write (chunk: Uint8Array, cb?: Callback): void {
+    this._write(chunk, cb || (() => {}))
+  }
+
+  /**
+   * Signal the end of the writable side.
+   */
+  end (): void {
+    if (this._writableEnded) return
+    this._writableEnded = true
+    this.emit('finish')
+  }
+
+  /**
+   * Destroy and cleanup this peer connection.
+   * If the optional `err` parameter is passed, then it will be emitted as an 'error' event.
+   */
+  destroy (err?: Error): void {
+    this.__destroy(err)
   }
 
   __destroy (err?: Error | null): void {
@@ -470,8 +509,10 @@ class Peer extends Duplex<Uint8Array, Uint8Array, Uint8Array, Uint8Array, true, 
       }
       this._pc = null
       this._channel = null
+      this.destroyed = true
       if (err) this.emit('error', err)
-      cb()
+      this.emit('close')
+      cb(null)
     }, 0)
   }
 
