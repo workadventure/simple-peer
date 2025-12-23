@@ -11,9 +11,9 @@
 
 #### Simple WebRTC video, voice, and data channels
 
-This package is a more up to date version of feross's simple-peer, it does away with node:stream and node:buffer in favor of streamx and Uint8Array, making the module a lot smaller, additionally it provides `@thaunknown/simple-peer/lite.js` which is the same peer implementation, but without MediaTrack and MediaStream handling, just pure Uint8/String data.
+This package is a more up to date version of feross's simple-peer, it uses `EventEmitter` and `Uint8Array` instead of node streams and buffers, making the module lighter and fully compatible with browser bundlers like Vite. It provides `@thaunknown/simple-peer/lite.js` which is the same peer implementation, but without MediaTrack and MediaStream handling, just pure Uint8/String data.
 
-It's fully backwards compatible with feross's version.
+> **Breaking change:** This version no longer extends `Duplex` stream. The `pipe()` method is not available. Use `peer.on('data', ...)` and `peer.send()` / `peer.write()` instead.
 
 ## features
 
@@ -22,7 +22,7 @@ It's fully backwards compatible with feross's version.
 - supports **video/voice streams**
 - supports **data channel**
   - text and binary data
-  - node.js [duplex stream](http://nodejs.org/api/stream.html) interface
+  - event-based API with `on('data')`, `send()`, and `write()`
 - supports advanced options like:
   - enable/disable [trickle ICE candidates](http://webrtchacks.com/trickle-ice/)
   - manually set config options
@@ -318,7 +318,7 @@ Send text/binary data to the remote peer. `data` can be any of several types: `S
 `Buffer` (see [buffer](https://github.com/feross/buffer)), `ArrayBufferView` (`Uint8Array`,
 etc.), `ArrayBuffer`, or `Blob` (in browsers that support it).
 
-Note: If this method is called before the `peer.on('connect')` event has fired, then an exception will be thrown. Use `peer.write(data)` (which is inherited from the node.js [duplex stream](http://nodejs.org/api/stream.html) interface) if you want this data to be buffered instead.
+Note: If this method is called before the `peer.on('connect')` event has fired, then an exception will be thrown. Use `peer.write(data)` if you want this data to be buffered instead.
 
 ### `peer.addStream(stream)`
 
@@ -365,11 +365,9 @@ if (Peer.WEBRTC_SUPPORT) {
 }
 ```
 
-### duplex stream
+### data channel API
 
-`Peer` objects are instances of `stream.Duplex`. They behave very similarly to a
-`net.Socket` from the node core `net` module. The duplex stream reads/writes to the data
-channel.
+`Peer` objects extend `EventEmitter` and provide a simple API for sending and receiving data.
 
 ```js
 var peer = new Peer(opts)
@@ -379,6 +377,8 @@ peer.on('data', function (chunk) {
   console.log('got a chunk', chunk)
 })
 ```
+
+> **Note:** The `pipe()` method is no longer supported. Use `peer.on('data', ...)` to receive data and `peer.send()` / `peer.write()` to send data.
 
 ## events
 
@@ -581,10 +581,9 @@ and sending the buffer at some later point in time. We immediately call
 `channel.send()` on the data channel. So it should be fine to mutate the buffer
 right afterward.
 
-However, beware that `peer.write(buf)` (a writable stream method) does not have
-the same contract. It will potentially buffer the data and call
-`channel.send()` at a future point in time, so definitely don't assume it's
-safe to mutate the buffer.
+However, beware that `peer.write(buf)` does not have the same contract. It will
+potentially buffer the data and call `channel.send()` at a future point in time,
+so definitely don't assume it's safe to mutate the buffer.
 
 
 ## connection does not work on some networks?
