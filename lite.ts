@@ -442,6 +442,7 @@ class Peer extends EventEmitter<PeerEvents> {
   end (): void {
     if (this._writableEnded) return
     this._writableEnded = true
+    if (!this._readableEnded) this.push(null)
     this.emit('finish')
   }
 
