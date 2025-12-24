@@ -102,8 +102,8 @@ interface PeerEvents {
   negotiated: () => void
   iceTimeout: () => void
   _iceComplete: () => void
-  track?: (track: MediaStreamTrack, stream: MediaStream) => void
-  stream?: (stream: MediaStream) => void
+  track: (track: MediaStreamTrack, stream: MediaStream) => void
+  stream: (stream: MediaStream) => void
 }
 
 /**
