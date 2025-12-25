@@ -3,11 +3,13 @@ import Lite, { PeerOptions } from './lite.js'
 import errCode from 'err-code'
 import { MediaStream, MediaStreamTrack, RTCRtpSender, RTCRtpTransceiver } from 'webrtc-polyfill'
 
+type DataChunk = ArrayBufferView | ArrayBuffer | Uint8Array | string | Blob
+
 /**
  * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
  * Duplex stream.
  */
-class Peer extends Lite {
+class Peer<TData extends DataChunk = Uint8Array> extends Lite<TData> {
   streams: MediaStream[]
   _senderMap: WeakMap<MediaStreamTrack, WeakMap<MediaStream, RTCRtpSender>>
 

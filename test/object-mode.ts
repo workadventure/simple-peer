@@ -1,10 +1,10 @@
 import Peer from '../index.js'
 import { test, expect } from 'vitest'
 
-test('data send/receive string {objectMode: true}', function () {
+test('data send/receive string {binary: false}', function () {
   return new Promise<void>((resolve) => {
-    const peer1 = new Peer({ initiator: true, objectMode: true })
-    const peer2 = new Peer({ objectMode: true })
+    const peer1 = new Peer<string>({ initiator: true, binary: false })
+    const peer2 = new Peer<string>({ binary: false })
     peer1.on('signal', function (data) {
       peer2.signal(data)
     })
@@ -37,10 +37,10 @@ test('data send/receive string {objectMode: true}', function () {
   })
 })
 
-test('data send/receive Buffer {objectMode: true}', function () {
+test('data send/receive Buffer {binary: false}', function () {
   return new Promise<void>((resolve) => {
-    const peer1 = new Peer({ initiator: true, objectMode: true })
-    const peer2 = new Peer({ objectMode: true })
+    const peer1 = new Peer<string>({ initiator: true, binary: false })
+    const peer2 = new Peer<string>({ binary: false })
     peer1.on('signal', function (data) {
       peer2.signal(data)
     })
@@ -73,10 +73,10 @@ test('data send/receive Buffer {objectMode: true}', function () {
   })
 })
 
-test('data send/receive Uint8Array {objectMode: true}', function () {
+test('data send/receive Uint8Array {binary: false}', function () {
   return new Promise<void>((resolve) => {
-    const peer1 = new Peer({ initiator: true, objectMode: true })
-    const peer2 = new Peer({ objectMode: true })
+    const peer1 = new Peer<string>({ initiator: true, binary: false })
+    const peer2 = new Peer<string>({ binary: false })
     peer1.on('signal', function (data) {
       peer2.signal(data)
     })
@@ -111,10 +111,10 @@ test('data send/receive Uint8Array {objectMode: true}', function () {
   })
 })
 
-test('data send/receive ArrayBuffer {objectMode: true}', function () {
+test('data send/receive ArrayBuffer {binary: false}', function () {
   return new Promise<void>((resolve) => {
-    const peer1 = new Peer({ initiator: true, objectMode: true })
-    const peer2 = new Peer({ objectMode: true })
+    const peer1 = new Peer<string>({ initiator: true, binary: false })
+    const peer2 = new Peer<string>({ binary: false })
     peer1.on('signal', function (data) {
       peer2.signal(data)
     })
