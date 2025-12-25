@@ -1,5 +1,13 @@
 # Changelog
 
+## [11.0.2](https://github.com/workadventure/simple-peer/compare/v11.0.1...v11.0.2) (2025-12-25)
+
+
+### Bug Fixes
+
+* Fixing type of PeerEvents ([339a673](https://github.com/workadventure/simple-peer/commit/339a67366bdd655474937870e6c50e93248f1c52))
+* Turning "data" event to Uint8Array only for now (to keep compatibility with old versions) ([#15](https://github.com/workadventure/simple-peer/issues/15)) ([c4d7ba4](https://github.com/workadventure/simple-peer/commit/c4d7ba40204ce2dc8bd0a094bf3cb043a9076c8d))
+
 ## 11.0.1 (2025-12-23)
 
 
