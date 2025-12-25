@@ -84,9 +84,10 @@
   },
   "scripts": {
     "build": "tsc",
+    "typecheck-tests": "tsc --project tsconfig.test.json --noEmit",
     "prebuild": "rm -rf dist",
     "prepublishOnly": "npm run build",
-    "test": "npm run build && vitest run",
+    "test": "npm run build && npm run typecheck-tests && vitest run",
     "test:watch": "vitest",
     "test-node": "vitest run",
     "test-browser": "npm run build && vitest run --config vitest.browser.config.ts",

@@ -77,8 +77,8 @@ test('data send/receive Uint8Array', function () {
 
 test('data send/receive ArrayBuffer', function () {
   return new Promise<void>((resolve) => {
-    const peer1 = new Peer({ initiator: true })
-    const peer2 = new Peer()
+    const peer1 = new Peer<ArrayBuffer>({ initiator: true })
+    const peer2 = new Peer<ArrayBuffer>()
     peer1.on('signal', function (data) {
       peer2.signal(data)
     })

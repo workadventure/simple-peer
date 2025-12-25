@@ -1,11 +1,12 @@
 /*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 import debug from 'debug'
 import { RTCPeerConnection, RTCSessionDescription, RTCIceCandidate, RTCDataChannel, RTCDataChannelEvent, RTCPeerConnectionIceEvent, MediaStream, MediaStreamTrack } from 'webrtc-polyfill'
-  import { EventEmitter } from 'eventemitter3'
+import { EventEmitter } from 'eventemitter3'
 import errCode from 'err-code'
 import { randomBytes, arr2hex, text2arr } from 'uint8-util'
 
 type Callback = (err: Error | null) => void
+type DataChunk = ArrayBufferView | ArrayBuffer | Uint8Array | string | Blob
 
 const Debug = debug('simple-peer')
 
@@ -46,7 +47,7 @@ interface PeerOptions {
   trickle?: boolean
   allowHalfTrickle?: boolean
   iceCompleteTimeout?: number
-  objectMode?: boolean
+  binary?: boolean
   allowHalfOpen?: boolean
 }
 
@@ -88,13 +89,13 @@ interface LegacyStatsResult {
   stat: (name: string) => unknown
 }
 
-interface PeerEvents {
+interface PeerEvents<TData> {
   signal: (data: SignalData) => void
   connect: () => void
   disconnect: () => void
   close: () => void
   error: (err: Error) => void
-  data: (data: Uint8Array | string) => void
+  data: (data: TData) => void
   end: () => void
   finish: () => void
   iceStateChange: (iceConnectionState: RTCIceConnectionState, iceGatheringState: RTCIceGatheringState) => void
@@ -110,7 +111,7 @@ interface PeerEvents {
  * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
  * Extends EventEmitter for event handling.
  */
-class Peer extends EventEmitter<PeerEvents> {
+class Peer<TData extends DataChunk = Uint8Array> extends EventEmitter<PeerEvents<TData>> {
   _pc: RTCPeerConnection | null
   _id: string
   channelName: string | null
@@ -149,13 +150,13 @@ class Peer extends EventEmitter<PeerEvents> {
   _closingInterval: ReturnType<typeof setInterval> | null
   _remoteTracks: Array<{ track: MediaStreamTrack; stream: MediaStream }> | null
   _remoteStreams: MediaStream[] | null
-  _chunk: ArrayBufferView | ArrayBuffer | Uint8Array | string | Blob | null
+  _chunk: TData | null
   _cb: Callback | null
   _interval: ReturnType<typeof setInterval> | null
   _isReactNativeWebrtc: boolean
   _connecting: boolean
   _onFinishBound: (() => void) | null
-  __objectMode: boolean
+  _binary: boolean
 
   static WEBRTC_SUPPORT: boolean
   static config: RTCConfiguration
@@ -167,7 +168,6 @@ class Peer extends EventEmitter<PeerEvents> {
     this.destroyed = false
     this._readableEnded = false
     this._writableEnded = false
-    this.__objectMode = !!opts.objectMode
 
     this._id = arr2hex(randomBytes(4)).slice(0, 7)
     this._debug('new peer %o', opts)
@@ -225,7 +225,10 @@ class Peer extends EventEmitter<PeerEvents> {
     this._chunk = null
     this._cb = null
     this._interval = null
+    this._isReactNativeWebrtc = typeof window !== 'undefined' && (window as typeof window & { ReactNativeWebRTCDebug?: unknown }).ReactNativeWebRTCDebug != null
     this._connecting = false
+    this._onFinishBound = null
+    this._binary = opts.binary !== undefined ? opts.binary : true
 
     try {
       this._pc = new RTCPeerConnection(this.config)
@@ -366,10 +369,10 @@ class Peer extends EventEmitter<PeerEvents> {
   /**
    * Send text/binary data to the remote peer.
    */
-  send (chunk: ArrayBufferView | ArrayBuffer | Uint8Array | string | Blob): void {
+  send (chunk: TData): void {
     if (this._destroying) return
     if (this.destroyed) throw errCode(new Error('cannot send after peer is destroyed'), 'ERR_DESTROYED')
-    this._channel!.send(chunk as string | Blob | ArrayBuffer | ArrayBufferView)
+    this._channel!.send(chunk as DataChunk)
   }
 
   _needsNegotiation (): void {
@@ -420,7 +423,7 @@ class Peer extends EventEmitter<PeerEvents> {
   /**
    * Push data to the readable side. If data is null, signals end of stream.
    */
-  push (data: Uint8Array | string | null): void {
+  push (data: TData | null): void {
     if (data === null) {
       this._readableEnded = true
       this.emit('end')
@@ -432,7 +435,7 @@ class Peer extends EventEmitter<PeerEvents> {
   /**
    * Write data to the peer (with optional callback).
    */
-  write (chunk: ArrayBufferView | ArrayBuffer | Uint8Array | string | Blob, cb?: Callback): void {
+  write (chunk: TData, cb?: Callback): void {
     this._write(chunk, cb || (() => {}))
   }
 
@@ -567,7 +570,7 @@ class Peer extends EventEmitter<PeerEvents> {
     }, CHANNEL_CLOSING_TIMEOUT)
   }
 
-  _write (chunk: ArrayBufferView | ArrayBuffer | Uint8Array | string | Blob, cb: Callback): void {
+  _write (chunk: TData, cb: Callback): void {
     if (this.destroyed) return cb(errCode(new Error('cannot write after peer is destroyed'), 'ERR_DATA_CHANNEL'))
 
     if (this._connected) {
@@ -983,13 +986,16 @@ class Peer extends EventEmitter<PeerEvents> {
 
   _onChannelMessage (event: MessageEvent): void {
     if (this.destroyed) return
-    let data: Uint8Array | string = event.data
+    let data: unknown = event.data
     if (data instanceof ArrayBuffer) {
       data = new Uint8Array(data)
-    } else if (this.__objectMode === false) {
+    }
+    if (ArrayBuffer.isView(data)) {
+      // keep binary views as-is
+    } else if (typeof data === 'string' && this._binary) {
       data = text2arr(data as string)
     }
-    this.push(data as Uint8Array)
+    this.push(data as TData)
   }
 
   _onChannelBufferedAmountLow (): void {

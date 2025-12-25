@@ -279,7 +279,7 @@ If `opts` is specified, then the default options (shown below) will be overridde
   trickle: true,
   allowHalfTrickle: false,
   wrtc: {}, // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
-  objectMode: false
+  binary: true
 }
 ```
 
@@ -299,8 +299,28 @@ The options do the following:
   - [`RTCPeerConnection`](https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection)
   - [`RTCSessionDescription`](https://www.w3.org/TR/webrtc/#dom-rtcsessiondescription)
   - [`RTCIceCandidate`](https://www.w3.org/TR/webrtc/#dom-rtcicecandidate)
+- `binary` - set to `false` to send/receive text as strings. Defaults to `true` (binary payloads as `Uint8Array`).
 
-- `objectMode` - set to `true` to create the stream in [Object Mode](https://nodejs.org/api/stream.html#stream_object_mode). In this mode, incoming string data is not automatically converted to `Buffer` objects.
+### Typing the peer
+
+You can pick the data type via a generic parameter. By default data events are `Uint8Array` when `binary: true`.
+
+```ts
+import Peer from 'simple-peer'
+
+// default: Uint8Array
+const peer = new Peer()
+peer.on('data', (data: Uint8Array) => {})
+
+// strings only
+const textPeer = new Peer<string>({ binary: false })
+textPeer.send('hello')
+
+// custom struct (you must handle serialization)
+interface Message { type: 'ping'; id: string }
+const msgPeer = new Peer<Message>({ binary: false })
+msgPeer.send({ type: 'ping', id: '1' })
+```
 
 ### `peer.signal(data)`
 
