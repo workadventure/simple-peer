@@ -94,7 +94,7 @@ interface PeerEvents {
   disconnect: () => void
   close: () => void
   error: (err: Error) => void
-  data: (data: Uint8Array | string) => void
+  data: (data: Uint8Array) => void
   end: () => void
   finish: () => void
   iceStateChange: (iceConnectionState: RTCIceConnectionState, iceGatheringState: RTCIceGatheringState) => void
@@ -420,7 +420,7 @@ class Peer extends EventEmitter<PeerEvents> {
   /**
    * Push data to the readable side. If data is null, signals end of stream.
    */
-  push (data: Uint8Array | string | null): void {
+  push (data: Uint8Array | null): void {
     if (data === null) {
       this._readableEnded = true
       this.emit('end')
