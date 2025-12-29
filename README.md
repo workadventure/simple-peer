@@ -1,18 +1,17 @@
-# @thaunknown/simple-peer [![coveralls][coveralls-image]][coveralls-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
+# @workadventure/simple-peer [![coveralls][coveralls-image]][coveralls-url] [![npm][npm-image]][npm-url] [![downloads][downloads-image]][downloads-url] [![javascript style guide][standard-image]][standard-url]
 
-[coveralls-image]: https://coveralls.io/repos/github/thaunknown/simple-peer/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/github/thaunknown/simple-peer?branch=master
-[npm-image]: https://img.shields.io/npm/v/@thaunknown/simple-peer.svg
-[npm-url]: https://npmjs.org/package/@thaunknown/simple-peer
-[downloads-image]: https://img.shields.io/npm/dm/@thaunknown/simple-peer.svg
-[downloads-url]: https://npmjs.org/package/@thaunknown/simple-peer
+[coveralls-image]: https://coveralls.io/repos/github/workadventure/simple-peer/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/workadventure/simple-peer?branch=master
+[npm-image]: https://img.shields.io/npm/v/@workadventure/simple-peer.svg
+[npm-url]: https://npmjs.org/package/@workadventure/simple-peer
+[downloads-image]: https://img.shields.io/npm/dm/@workadventure/simple-peer.svg
+[downloads-url]: https://npmjs.org/package/@workadventure/simple-peer
 [standard-image]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
 [standard-url]: https://standardjs.com
 
 #### Simple WebRTC video, voice, and data channels
 
-This package is a more up-to-date version of feross's simple-peer, rewritten 100% in Typescript. It uses `EventEmitter` and `Uint8Array` instead of node streams and buffers, making the module lighter and fully compatible with browser bundlers like Vite. It provides `@thaunknown/simple-peer/lite.js` which is the same peer implementation, but without MediaTrack and MediaStream handling, just pure Uint8/String data.
-
+This package is a more up-to-date version of feross's simple-peer, rewritten 100% in Typescript. It uses `EventEmitter` and `Uint8Array` instead of node streams and buffers, making the module lighter and fully compatible with browser bundlers like Vite. It provides `@workadventure/simple-peer/lite.ts` which is the same peer implementation, but without MediaTrack and MediaStream handling, just pure Uint8/String data.
 
 > **Breaking change:** This version no longer extends `Duplex` stream. The `pipe()` method is not available. Use `peer.on('data', ...)` and `peer.send()` / `peer.write()` instead.
 
@@ -53,7 +52,20 @@ This package is used by [WebTorrent](https://webtorrent.io) and [many others](#w
 npm install @workadventure/simple-peer
 ```
 
-This package works in the browser with a bundler like Vite.
+This package works with modern bundlers (Vite, Rollup, Webpack) and also directly in the browser via native ESM.
+If you do not use a bundler, include it using a `<script type="module">` and import from a CDN:
+
+```html
+<script type="module">
+  import Peer from 'https://cdn.jsdelivr.net/npm/@workadventure/simple-peer@12/dist/index.js'
+  // use Peer here
+</script>
+```
+
+Variants are available as separate entry points:
+
+- Lite: `@workadventure/simple-peer/lite`
+- Full: `@workadventure/simple-peer/full`
 
 ## usage
 
@@ -74,9 +86,10 @@ Let's create an html page that lets you manually connect two peers:
       <button type="submit">submit</button>
     </form>
     <pre id="outgoing"></pre>
-    <script src="simplepeer.min.js"></script>
-    <script>
-      const p = new SimplePeer({
+    <script type="module">
+      import Peer from 'https://cdn.jsdelivr.net/npm/@workadventure/simple-peer@12/dist/index.js'
+
+      const p = new Peer({
         initiator: location.hash === '#1',
         trickle: false
       })
@@ -127,7 +140,7 @@ peer-to-peer connection is established.
 ### data channels
 
 ```js
-var Peer = require('simple-peer')
+var Peer = require('@workadventure/simple-peer')
 
 var peer1 = new Peer({ initiator: true })
 var peer2 = new Peer()
@@ -158,7 +171,7 @@ peer2.on('data', data => {
 Video/voice is also super simple! In this example, peer1 sends video to peer2.
 
 ```js
-var Peer = require('simple-peer')
+var Peer = require('@workadventure/simple-peer')
 
 // get video/voice stream
 navigator.mediaDevices.getUserMedia({
@@ -203,7 +216,7 @@ It is also possible to establish a data-only connection at first, and later add
 a video/voice stream, if desired.
 
 ```js
-var Peer = require('simple-peer') // create peer without waiting for media
+var Peer = require('@workadventure/simple-peer') // create peer without waiting for media
 
 var peer1 = new Peer({ initiator: true }) // you don't need streams here
 var peer2 = new Peer()
@@ -245,7 +258,7 @@ navigator.mediaDevices.getUserMedia({
 To use this library in node, pass in `opts.wrtc` as a parameter (see [the constructor options](#peer--new-peeropts)):
 
 ```js
-var Peer = require('simple-peer')
+var Peer = require('@workadventure/simple-peer')
 var wrtc = require('wrtc')
 
 var peer1 = new Peer({ initiator: true, wrtc: wrtc })
