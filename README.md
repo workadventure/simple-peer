@@ -11,7 +11,8 @@
 
 #### Simple WebRTC video, voice, and data channels
 
-This package is a more up to date version of feross's simple-peer, it uses `EventEmitter` and `Uint8Array` instead of node streams and buffers, making the module lighter and fully compatible with browser bundlers like Vite. It provides `@thaunknown/simple-peer/lite.js` which is the same peer implementation, but without MediaTrack and MediaStream handling, just pure Uint8/String data.
+This package is a more up-to-date version of feross's simple-peer, rewritten 100% in Typescript. It uses `EventEmitter` and `Uint8Array` instead of node streams and buffers, making the module lighter and fully compatible with browser bundlers like Vite. It provides `@thaunknown/simple-peer/lite.js` which is the same peer implementation, but without MediaTrack and MediaStream handling, just pure Uint8/String data.
+
 
 > **Breaking change:** This version no longer extends `Duplex` stream. The `pipe()` method is not available. Use `peer.on('data', ...)` and `peer.send()` / `peer.write()` instead.
 
@@ -49,14 +50,10 @@ This package is used by [WebTorrent](https://webtorrent.io) and [many others](#w
 ## install
 
 ```
-npm install simple-peer
+npm install @workadventure/simple-peer
 ```
 
-This package works in the browser with [browserify](https://browserify.org). If
-you do not use a bundler, you can use the `simplepeer.min.js` standalone script
-directly in a `<script>` tag. This exports a `SimplePeer` constructor on
-`window`. Wherever you see `Peer` in the examples below, substitute that with
-`SimplePeer`.
+This package works in the browser with a bundler like Vite.
 
 ## usage
 
