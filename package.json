@@ -40,6 +40,7 @@
     "typescript": "^5.9.3",
     "util": "^0.12.5",
     "vite": "^7.2.7",
+    "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.15",
     "ws": "^8.18.0"
   },
@@ -59,19 +60,26 @@
     "webrtc stream"
   ],
   "license": "MIT",
-  "main": "dist/index.js",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
       "default": "./dist/index.js"
     },
     "./lite": {
       "types": "./dist/lite.d.ts",
+      "import": "./dist/lite.js",
+      "require": "./dist/lite.cjs",
       "default": "./dist/lite.js"
     },
     "./full": {
       "types": "./dist/full.d.ts",
+      "import": "./dist/full.js",
+      "require": "./dist/full.cjs",
       "default": "./dist/full.js"
     }
   },
@@ -83,7 +91,7 @@
     "url": "git://github.com/workadventure/simple-peer.git"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "vite build",
     "prebuild": "rm -rf dist",
     "prepublishOnly": "npm run build",
     "test": "npm run build && vitest run",
