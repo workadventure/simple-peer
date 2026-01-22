@@ -1,5 +1,17 @@
 # Changelog
 
+## [12.0.0](https://github.com/workadventure/simple-peer/compare/v11.0.2...v12.0.0) (2026-01-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* Migration to Vite
+
+### Features
+
+* add preferred codec support and real browser verification ([8676482](https://github.com/workadventure/simple-peer/commit/867648293933dc53e415d537f8a1090289261aa2))
+* Migration to Vite ([0d0cd92](https://github.com/workadventure/simple-peer/commit/0d0cd92f8ef9ab941fae44363358b5b824dedf1e))
+
 ## [11.0.2](https://github.com/workadventure/simple-peer/compare/v11.0.1...v11.0.2) (2025-12-25)
 
 
