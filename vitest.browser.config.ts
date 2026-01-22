@@ -31,9 +31,26 @@ export default defineConfig({
       instances: [
         // Default to chromium, but can be overridden with --browser.name flag
         // Supported browsers: chromium, firefox, webkit
-        { browser: 'chromium', provider: playwright() },
-        { browser: 'firefox', provider: playwright() },
-        { browser: 'webkit', provider: playwright() },
+        {
+          browser: 'chromium',
+          provider: playwright({
+            launchOptions: {
+              args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream']
+            }
+          })
+        },
+        {
+          browser: 'firefox',
+          provider: playwright({
+            launchOptions: {
+              firefoxUserPrefs: {
+                'media.navigator.streams.fake': true,
+                'media.navigator.permission.disabled': true
+              }
+            }
+          })
+        },
+        { browser: 'webkit', provider: playwright() }
       ],
       headless: true
     }
