@@ -1,7 +1,16 @@
 /*! simple-peer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
-import Lite, { PeerOptions } from './lite.js'
+import Lite, { PeerLiteOptions } from './lite.js'
 import errCode from 'err-code'
 import { MediaStream, MediaStreamTrack, RTCRtpSender, RTCRtpTransceiver } from 'webrtc-polyfill'
+
+interface PreferredCodecs {
+  video?: string[]
+  audio?: string[]
+}
+
+interface PeerOptions extends PeerLiteOptions {
+  preferredCodecs?: PreferredCodecs
+}
 
 /**
  * WebRTC peer connection. Same API as node core `net.Socket`, plus a few extra methods.
@@ -10,6 +19,7 @@ import { MediaStream, MediaStreamTrack, RTCRtpSender, RTCRtpTransceiver } from '
 class Peer extends Lite {
   streams: MediaStream[]
   _senderMap: WeakMap<MediaStreamTrack, WeakMap<MediaStream, RTCRtpSender>>
+  preferredCodecs?: PreferredCodecs
 
   constructor (opts: PeerOptions = {}) {
     super(opts)
@@ -17,6 +27,7 @@ class Peer extends Lite {
 
     this.streams = opts.streams || (opts.stream ? [opts.stream] : []) // support old "stream" option
     this._senderMap = new WeakMap()
+    this.preferredCodecs = opts.preferredCodecs
 
     if (this.streams) {
       this.streams.forEach(stream => {
@@ -26,6 +37,47 @@ class Peer extends Lite {
     this._pc.ontrack = (event: RTCTrackEvent) => {
       this._onTrack(event)
     }
+  }
+
+  _setPreferredCodecs (kind: 'audio' | 'video', transceiver: RTCRtpTransceiver | null): void {
+    const preferred = this.preferredCodecs?.[kind]
+    if (!preferred || preferred.length === 0) return
+    if (!transceiver?.setCodecPreferences) return
+    if (typeof RTCRtpSender.getCapabilities !== 'function') return
+
+    const capabilities = RTCRtpSender.getCapabilities(kind)
+    if (!capabilities?.codecs?.length) return
+
+    const normalized = preferred.map(codec => codec.toLowerCase())
+    const ordered: RTCRtpCodecCapability[] = []
+    const used = new Set<number>()
+
+    normalized.forEach(pref => {
+      const prefIsFull = pref.includes('/')
+      capabilities.codecs.forEach((codec, index) => {
+        if (used.has(index)) return
+        const mime = codec.mimeType?.toLowerCase()
+        if (!mime) return
+        if (mime.endsWith('/rtx') || mime.endsWith('/red') || mime.endsWith('/ulpfec')) return
+        if (prefIsFull ? mime === pref : mime.endsWith('/' + pref)) {
+          used.add(index)
+          ordered.push(codec)
+        }
+      })
+    })
+
+    capabilities.codecs.forEach((codec, index) => {
+      if (used.has(index)) return
+      ordered.push(codec)
+    })
+
+    transceiver.setCodecPreferences(ordered)
+  }
+
+  _getTransceiverForSender (sender: RTCRtpSender): RTCRtpTransceiver | null {
+    const transceivers = this._pc!.getTransceivers?.()
+    if (!transceivers) return null
+    return transceivers.find(transceiver => transceiver.sender === sender) || null
   }
 
   /**
@@ -38,7 +90,10 @@ class Peer extends Lite {
 
     if (this.initiator) {
       try {
-        this._pc!.addTransceiver(kind, init as RTCRtpTransceiverInit)
+        const transceiver = this._pc!.addTransceiver(kind, init as RTCRtpTransceiverInit)
+        if (kind === 'audio' || kind === 'video') {
+          this._setPreferredCodecs(kind, transceiver)
+        }
         this._needsNegotiation()
       } catch (err) {
         this.__destroy(errCode(err as Error, 'ERR_ADD_TRANSCEIVER'))
@@ -78,6 +133,9 @@ class Peer extends Lite {
       sender = this._pc!.addTrack(track, stream)
       submap.set(stream, sender)
       this._senderMap.set(track, submap)
+      if (track.kind === 'audio' || track.kind === 'video') {
+        this._setPreferredCodecs(track.kind, this._getTransceiverForSender(sender))
+      }
       this._needsNegotiation()
     } else if ((sender as RTCRtpSender & { removed?: boolean }).removed) {
       throw errCode(new Error('Track has been removed. You should enable/disable tracks that you want to re-add.'), 'ERR_SENDER_REMOVED')
@@ -185,5 +243,5 @@ class Peer extends Lite {
 
 export default Peer
 export { Peer }
-export type { PeerOptions, SignalData, AddressInfo, StatsReport } from './lite.js'
-
+export type { PeerLiteOptions, SignalData, AddressInfo, StatsReport } from './lite.js'
+export type { PeerOptions, PreferredCodecs }

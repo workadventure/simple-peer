@@ -273,6 +273,10 @@ If `opts` is specified, then the default options (shown below) will be overridde
   sdpTransform: function (sdp) { return sdp },
   stream: false,
   streams: [],
+  preferredCodecs: {
+    audio: [],
+    video: []
+  },
   trickle: true,
   allowHalfTrickle: false,
   wrtc: {}, // RTCPeerConnection/RTCSessionDescription/RTCIceCandidate
@@ -291,6 +295,7 @@ The options do the following:
 - `sdpTransform` - function to transform the generated SDP signaling data (for advanced users)
 - `stream` - if video/voice is desired, pass stream returned from [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
 - `streams` - an array of MediaStreams returned from [`getUserMedia`](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)
+- `preferredCodecs` - prefer codecs for outbound tracks (by kind), using `RTCRtpTransceiver.setCodecPreferences` where supported. Example: `{ video: ['video/AV1', 'video/VP9', 'video/VP8'], audio: ['audio/opus'] }`. If the browser does not support codec preferences (or the codec is not supported), it falls back to the browser’s default.
 - `trickle` - set to `false` to disable [trickle ICE](http://webrtchacks.com/trickle-ice/) and get a single 'signal' event (slower)
 - `wrtc` - custom webrtc implementation, mainly useful in node to specify in the [wrtc](https://npmjs.com/package/wrtc) package. Contains an object with the properties:
   - [`RTCPeerConnection`](https://www.w3.org/TR/webrtc/#dom-rtcpeerconnection)

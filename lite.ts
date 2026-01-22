@@ -33,7 +33,7 @@ interface SignalData {
   }
 }
 
-interface PeerOptions {
+interface PeerLiteOptions {
   initiator?: boolean
   channelConfig?: RTCDataChannelInit
   channelName?: string
@@ -161,7 +161,7 @@ class Peer extends EventEmitter<PeerEvents> {
   static config: RTCConfiguration
   static channelConfig: RTCDataChannelInit
 
-  constructor (opts: PeerOptions = {}) {
+  constructor (opts: PeerLiteOptions = {}) {
     super()
 
     this.destroyed = false
@@ -1045,4 +1045,4 @@ Peer.config = {
 Peer.channelConfig = {}
 
 export default Peer
-export { Peer, PeerOptions, SignalData, AddressInfo, StatsReport }
+export { Peer, PeerLiteOptions, SignalData, AddressInfo, StatsReport }
