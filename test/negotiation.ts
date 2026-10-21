@@ -245,3 +245,18 @@ test('negotiated channels', function () {
     })
   })
 })
+
+test('an offer scheduled before destroy does not throw once the peer is destroyed', function () {
+  if (!process.browser) return
+
+  return new Promise<void>((resolve) => {
+    const peer = new Peer({ initiator: true, stream: common.getMediaStream() })
+    peer.on('close', function () {
+      // negotiate() defers _createOffer() with setTimeout; timer clamping can let destroy's timer win the race
+      expect(() => peer._createOffer()).not.toThrow()
+      expect(() => peer._createAnswer()).not.toThrow()
+      resolve()
+    })
+    peer.destroy()
+  })
+})
