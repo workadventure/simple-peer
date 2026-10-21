@@ -204,6 +204,8 @@ class Peer extends Lite {
    * are applied again before every offer: changing `receiveCodecs` then calling `negotiate()` takes effect.
    */
   _createOffer (): void {
+    // negotiate() defers the offer with setTimeout: the peer may have been destroyed (and _pc nulled) in between.
+    if (this.destroyed) return
     this._applyPreferredCodecsToAllTransceivers()
     super._createOffer()
   }
@@ -213,6 +215,7 @@ class Peer extends Lite {
    * never express its preference. setCodecPreferences() must run before createAnswer() to shape the answer.
    */
   _createAnswer (): void {
+    if (this.destroyed) return
     this._applyPreferredCodecsToAllTransceivers()
     super._createAnswer()
   }
