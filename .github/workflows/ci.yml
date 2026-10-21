@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
+          - ubuntu-24.04 # ubuntu-latest (26.04) is not supported by Playwright 1.57
         node:
           - '20'
     steps:
